@@ -1,5 +1,9 @@
 FROM python:3.8-slim-buster as base
 
+RUN  sed -i 's/deb.debian.org/mirrors.sjtug.sjtu.edu.cn/g' /etc/apt/sources.list
+RUN  apt-get clean
+RUN apt-get update
+
 SHELL ["/bin/bash", "-xo", "pipefail", "-c"]
 
 USER root
@@ -53,11 +57,13 @@ RUN apt-get -qq update \
     xz-utils \
     && \
     if [ "$(uname -m)" = "aarch64" ]; then \
-        curl -o wkhtmltox.deb -sSL https://github.com/wkhtmltopdf/packaging/releases/download/0.12.6-1/wkhtmltox_0.12.6-1.buster_arm64.deb \
+        curl -o wkhtmltox.deb  https://github.com/wkhtmltopdf/packaging/releases/download/0.12.6-1/wkhtmltox_0.12.6-1.buster_arm64.deb \
     ; else \
         curl -o wkhtmltox.deb -sSL https://github.com/wkhtmltopdf/wkhtmltopdf/releases/download/${WKHTMLTOX_VERSION}/wkhtmltox_${WKHTMLTOX_VERSION}-1.buster_amd64.deb \
         && echo "${WKHTMLTOPDF_CHECKSUM} wkhtmltox.deb" | sha1sum -c - \
     ; fi \
+    && rm -rf /var/lib/apt/lists/* -vf \
+    && apt-get update \
     && apt-get install -y --no-install-recommends ./wkhtmltox.deb \
     && apt-get autopurge -yqq \
     && rm -rf /var/lib/apt/lists/* wkhtmltox.deb /tmp/*
